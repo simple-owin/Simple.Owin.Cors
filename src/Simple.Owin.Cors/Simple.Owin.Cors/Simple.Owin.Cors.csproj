@@ -40,8 +40,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Builder.cs" />
+    <Compile Include="CorsBuilder.cs" />
     <Compile Include="CorsMiddleware.cs" />
-    <Compile Include="IOriginMatcher.cs" />
+    <Compile Include="HeaderKeys.cs" />
+    <Compile Include="OriginMatcher.cs" />
     <Compile Include="Methods.cs" />
     <Compile Include="OriginRegexMatcher.cs" />
     <Compile Include="OriginSetMatcher.cs" />

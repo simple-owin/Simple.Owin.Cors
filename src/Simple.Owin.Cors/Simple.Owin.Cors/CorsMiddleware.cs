@@ -4,11 +4,22 @@ using System.Threading.Tasks;
 
 namespace Simple.Owin.Cors
 {
+    using System.Linq;
+
     public static class CorsMiddleware
     {
-        public static Func<IDictionary<string, object>, Func<Task>, Task> Build(IEnumerable<IOriginMatcher> origins)
+        public static CorsBuilder Create(params OriginMatcher[] origins)
         {
-            return new Builder(origins).Build();
+            var sets = origins.OfType<OriginSetMatcher>().ToList();
+            var list = origins.Except(sets).ToList();
+
+            var setMatcher = OriginSetMatcher.Combine(sets);
+            return new CorsBuilder(origins);
+        }
+
+        public static CorsBuilder Wildcard()
+        {
+            return new CorsBuilder(OriginMatcher.Wildcard);
         }
     }
 }

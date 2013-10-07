@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
@@ -12,43 +13,111 @@
         private readonly ParameterExpression _env = Expression.Parameter(typeof (IDictionary<string, object>));
         private readonly ParameterExpression _next = Expression.Parameter(typeof (Func<Task>));
         private readonly ConstantExpression _hostKey = Expression.Constant("Host");
-        private readonly List<Expression> _blocks = new List<Expression>();
 
-        private readonly IOriginMatcher[] _matchers;
+        private readonly OriginMatcher[] _matchers;
 
-        public Builder(IEnumerable<IOriginMatcher> matchers)
+        public Builder(IEnumerable<OriginMatcher> matchers)
         {
             _matchers = matchers.ToArray();
         }
 
+        public bool? AllowCredentials { get; set; }
+
+        public string[] AllowMethods { get; set; }
+        public string[] AllowHeaders { get; set; }
+        public string[] ExposeHeaders { get; set; }
+
+        public double? MaxAge { get; set; }
+
+        public int StopStatus { get; set; }
+
         public Func<IDictionary<string, object>, Func<Task>, Task> Build()
         {
-            BlockExpression isAllowed;
-            if (_matchers.Length == 1 && _matchers[0] is OriginMatchers.WildcardMatcher)
-            {
-                isAllowed = BuildWildcardBlock();
-            }
-            else
-            {
-                isAllowed = BuildOriginCheckBlock();
-            }
+            var isAllowed = BuildCheckBlock();
 
-            var invoke = Expression.Invoke(_next);
-
-            var call = Expression.Call(Methods.Completed);
-
-            var task = Expression.Variable(typeof (Task));
-
-            var ifThen = (Expression.IfThenElse(isAllowed, Expression.Assign(task, invoke), Expression.Assign(task, call)));
-
-            var block = Expression.Block(new[] {task}, ifThen, task);
+            var block = BuildFinalBlock(isAllowed);
 
             var lambda = Expression.Lambda<Func<IDictionary<string, object>, Func<Task>, Task>>(block, _env, _next);
 
             return lambda.Compile();
         }
 
-        private BlockExpression BuildOriginCheckBlock()
+        private BlockExpression BuildCheckBlock()
+        {
+            if (_matchers.Length == 1 && _matchers[0] is OriginMatcher.WildcardMatcher)
+            {
+                return BuildWildcardBlock();
+            }
+            return BuildOriginMatchingBlock();
+        }
+
+        private BlockExpression BuildFinalBlock(Expression isAllowed)
+        {
+            var task = Expression.Variable(typeof (Task));
+            var stopStatus = Expression.Constant(StopStatus);
+
+            var setHeadersBlock = BuildSetHeadersBlock();
+
+            Expression allowedBlock = Expression.Assign(task, Expression.Invoke(_next));
+
+            if (setHeadersBlock.Count > 0)
+            {
+                setHeadersBlock.Add(allowedBlock);
+                allowedBlock = Expression.Block(new[] {task}, setHeadersBlock);
+            }
+
+            var ifThen =
+                (Expression.IfThenElse(isAllowed, allowedBlock,
+                    Expression.Assign(task, Expression.Call(Methods.Stop, _env, stopStatus))));
+
+            var block = Expression.Block(new[] {task}, ifThen, task);
+            return block;
+        }
+
+        private IList<Expression> BuildSetHeadersBlock()
+        {
+            var block = new List<Expression>();
+            if (AllowCredentials.GetValueOrDefault())
+            {
+                block.Add(BuildSetHeaderCall(HeaderKeys.AccessControlAllowCredentials, "true"));
+            }
+
+            if (AllowMethods != null && AllowMethods.Length > 0)
+            {
+                block.Add(BuildSetHeaderCall(HeaderKeys.AccessControlAllowMethods, AllowMethods));
+            }
+
+            if (AllowHeaders != null && AllowHeaders.Length > 0)
+            {
+                block.Add(BuildSetHeaderCall(HeaderKeys.AccessControlAllowHeaders, AllowHeaders));
+            }
+
+            if (ExposeHeaders != null && ExposeHeaders.Length > 0)
+            {
+                block.Add(BuildSetHeaderCall(HeaderKeys.AccessControlExposeHeaders, ExposeHeaders));
+            }
+
+            if (MaxAge.HasValue)
+            {
+                block.Add(BuildSetHeaderCall(HeaderKeys.AccessControlMaxAge, MaxAge.Value.ToString(CultureInfo.InvariantCulture)));
+            }
+
+            return block;
+        }
+
+        private Expression BuildSetHeaderCall(string key, string[] values)
+        {
+            return BuildSetHeaderCall(key, string.Join(", ", values));
+        }
+
+        private Expression BuildSetHeaderCall(string key, string value)
+        {
+            var keyConstant = Expression.Constant(key);
+            var valueConstant = Expression.Constant(value);
+            return Expression.Call(Methods.SetResponseHeaderValue, _env, keyConstant, valueConstant);
+        }
+
+        private BlockExpression BuildOriginMatchingBlock()
         {
             var blocks = new List<Expression>();
             ParameterExpression allowed = Expression.Variable(typeof (bool));
@@ -84,38 +153,5 @@
             };
             return Expression.Block(blocks);
         }
-    }
-
-    public static class HeaderKeys
-    {
-        /// <summary>
-        /// The <c>Access-Control-Allow-Origin</c> response header field.
-        /// </summary>
-        public const string AccessControlAllowOrigin = "Access-Control-Allow-Origin";
-
-        /// <summary>
-        /// The <c>Access-Control-Allow-Methods</c> response header field.
-        /// </summary>
-        public const string AccessControlAllowMethods = "Access-Control-Allow-Methods";
-
-        /// <summary>
-        /// The <c>Access-Control-Allow-Headers</c> response header field.
-        /// </summary>
-        public const string AccessControlAllowHeaders = "Access-Control-Allow-Methods";
-
-        /// <summary>
-        /// The <c>Access-Control-Expose-Headers</c> response header field.
-        /// </summary>
-        public const string AccessControlExposeHeaders = "Access-Control-Allow-Methods";
-
-        /// <summary>
-        /// The <c>Access-Control-Max-Age</c> response header field.
-        /// </summary>
-        public const string AccessControlMaxAge = "Access-Control-Allow-Methods";
-
-        /// <summary>
-        /// The <c>Access-Control-Allow-Credentials</c> response header field.
-        /// </summary>
-        public const string AccessControlAllowCredentials = "Access-Control-Allow-Methods";
     }
 }

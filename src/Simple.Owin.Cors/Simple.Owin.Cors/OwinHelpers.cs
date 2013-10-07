@@ -40,8 +40,9 @@
             headers[key] = new[] {value};
         }
 
-        public static Task Completed()
+        public static Task Stop(IDictionary<string, object> env, int statusCode)
         {
+            env[OwinKeys.StatusCode] = statusCode;
             var tcs = new TaskCompletionSource<int>();
             tcs.SetResult(0);
             return tcs.Task;

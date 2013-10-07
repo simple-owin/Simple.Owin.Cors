@@ -2,8 +2,9 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
-    public class OriginSetMatcher : IOriginMatcher
+    public class OriginSetMatcher : OriginMatcher
     {
         private readonly HashSet<string> _origins;
 
@@ -17,22 +18,30 @@
             _origins = new HashSet<string>(origins, StringComparer.InvariantCultureIgnoreCase);
         }
 
-        public bool IsMatch(string origin)
+        public override bool IsMatch(string origin)
         {
             return _origins.Contains(origin);
         }
+
+        public static OriginSetMatcher Combine(List<OriginSetMatcher> sets)
+        {
+            return new OriginSetMatcher(sets.SelectMany(s => s._origins));
+        }
     }
 
-    public static class OriginMatchers
+    public class OriginFuncMatcher : OriginMatcher
     {
-        public static readonly IOriginMatcher[] Wildcard = { new WildcardMatcher() };
+        private readonly Func<string, bool> _test;
 
-        internal class WildcardMatcher : IOriginMatcher
+        public OriginFuncMatcher(Func<string, bool> test)
         {
-            public bool IsMatch(string origin)
-            {
-                return true;
-            }
+            if (test == null) throw new ArgumentNullException("test");
+            _test = test;
+        }
+
+        public override bool IsMatch(string origin)
+        {
+            return _test(origin);
         }
     }
 }

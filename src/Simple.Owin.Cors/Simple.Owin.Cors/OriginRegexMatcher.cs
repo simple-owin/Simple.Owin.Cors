@@ -2,18 +2,23 @@
 {
     using System.Text.RegularExpressions;
 
-    public class OriginRegexMatcher : IOriginMatcher
+    public class OriginRegexMatcher : OriginMatcher
     {
-        private readonly Regex _regex;
+        private readonly Regex _pattern;
 
         public OriginRegexMatcher(string pattern)
         {
-            _regex = new Regex(pattern, RegexOptions.Compiled);
+            _pattern = new Regex(pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         }
 
-        public bool IsMatch(string origin)
+        public OriginRegexMatcher(Regex pattern)
         {
-            return _regex.IsMatch(origin);
+            _pattern = pattern;
+        }
+
+        public override bool IsMatch(string origin)
+        {
+            return _pattern.IsMatch(origin);
         }
     }
 }

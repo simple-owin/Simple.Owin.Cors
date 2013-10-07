@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Reflection;
+    using System.Threading.Tasks;
 
     public class Methods
     {
@@ -13,7 +14,7 @@
         public static readonly MethodInfo StringIsNullOrWhitespace = 
             MethodOf<string,bool>(string.IsNullOrWhiteSpace);
 
-        public static readonly MethodInfo Completed = MethodOf(OwinHelpers.Completed);
+        public static readonly MethodInfo Stop = MethodOf<IDictionary<string,object>, int, Task>(OwinHelpers.Stop);
 
         private static MethodInfo MethodOf<T1, T>(Func<T1, T> func)
         {
