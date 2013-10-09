@@ -1,4 +1,4 @@
-﻿namespace Simple.Owin.Cors
+﻿namespace Simple.Owin.CorsMiddleware
 {
     public static class HeaderKeys
     {

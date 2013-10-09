@@ -4,22 +4,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simple.Owin.Cors.Tests
+namespace Simple.Owin.CorsMiddleware.Tests
 {
     using Xunit;
+    using AppFunc = Func<IDictionary<string,object>, Task>;
 
     public class CheckTests
     {
         [Fact]
         public void ItCallsTheNextFuncWithWildcard()
         {
-            var func = CorsMiddleware.Create(OriginMatcher.Wildcard).Build();
+            var func = Cors.Create(OriginMatcher.Wildcard).Build();
             var env = new Dictionary<string, object>();
             bool pass = false;
-            Func<Task> next = () =>
+            AppFunc next = e =>
             {
                 pass = true;
-                return Completed();
+                return Completed(e);
             };
             func(env, next);
             Assert.True(pass);
@@ -28,13 +29,13 @@ namespace Simple.Owin.Cors.Tests
         [Fact]
         public void ItCallsTheNextFuncWithSet()
         {
-            var func = CorsMiddleware.Create(new OriginSetMatcher("https://cors.com")).Build();
+            var func = Cors.Create(new OriginSetMatcher("https://cors.com")).Build();
             var env = CreateEnv();
             bool pass = false;
-            Func<Task> next = () =>
+            AppFunc next = e =>
             {
                 pass = true;
-                return Completed();
+                return Completed(e);
             };
             func(env, next);
             Assert.True(pass);
@@ -43,13 +44,13 @@ namespace Simple.Owin.Cors.Tests
         [Fact]
         public void ItDoesNotCallTheNextFuncWithSet()
         {
-            var func = CorsMiddleware.Create(new OriginSetMatcher("https://reject.com")).Build();
+            var func = Cors.Create(new OriginSetMatcher("https://reject.com")).Build();
             var env = CreateEnv();
             bool pass = false;
-            Func<Task> next = () =>
+            AppFunc next = e =>
             {
                 pass = true;
-                return Completed();
+                return Completed(e);
             };
             func(env, next);
             Assert.False(pass);
@@ -58,13 +59,13 @@ namespace Simple.Owin.Cors.Tests
         [Fact]
         public void ItCallsTheNextFuncWithValidRegex()
         {
-            var func = CorsMiddleware.Create(@"/https:\/\/cors.com/").Build();
+            var func = Cors.Create(@"/https:\/\/cors.com/").Build();
             var env = CreateEnv();
             bool pass = false;
-            Func<Task> next = () =>
+            AppFunc next = e =>
             {
                 pass = true;
-                return Completed();
+                return Completed(e);
             };
             func(env, next);
             Assert.True(pass);
@@ -73,13 +74,13 @@ namespace Simple.Owin.Cors.Tests
         [Fact]
         public void ItDoesNotCallTheNextFuncWithInvalidRegex()
         {
-            var func = CorsMiddleware.Create(@"/https:\/\/reject.com/").Build();
+            var func = Cors.Create(@"/https:\/\/reject.com/").Build();
             var env = CreateEnv();
             bool pass = false;
-            Func<Task> next = () =>
+            AppFunc next = e =>
             {
                 pass = true;
-                return Completed();
+                return Completed(e);
             };
             func(env, next);
             Assert.False(pass);
@@ -89,13 +90,13 @@ namespace Simple.Owin.Cors.Tests
         public void ItCallsTheNextFuncWithValidTestFunc()
         {
             Func<string, bool> endsWithCors = s => s.EndsWith("cors.com", StringComparison.OrdinalIgnoreCase);
-            var func = CorsMiddleware.Create(endsWithCors).Build();
+            var func = Cors.Create(endsWithCors).Build();
             var env = CreateEnv();
             bool pass = false;
-            Func<Task> next = () =>
+            AppFunc next = e =>
             {
                 pass = true;
-                return Completed();
+                return Completed(e);
             };
             func(env, next);
             Assert.True(pass);
@@ -105,13 +106,13 @@ namespace Simple.Owin.Cors.Tests
         public void ItDoesNotCallTheNextFuncWithInvalidTestFunc()
         {
             Func<string, bool> endsWithReject = s => s.EndsWith("reject.com", StringComparison.OrdinalIgnoreCase);
-            var func = CorsMiddleware.Create(endsWithReject).Build();
+            var func = Cors.Create(endsWithReject).Build();
             var env = CreateEnv();
             bool pass = false;
-            Func<Task> next = () =>
+            AppFunc next = e =>
             {
                 pass = true;
-                return Completed();
+                return Completed(e);
             };
             func(env, next);
             Assert.False(pass);
@@ -120,7 +121,7 @@ namespace Simple.Owin.Cors.Tests
         [Fact]
         public void ItSetsTheDefaultResponseStatusWhenRejecting()
         {
-            var func = CorsMiddleware.Create(new OriginSetMatcher("https://reject.com")).Build();
+            var func = Cors.Create(new OriginSetMatcher("https://reject.com")).Build();
             var env = CreateEnv();
             func(env, Completed);
             Assert.Equal(403, env[OwinKeys.StatusCode]);
@@ -129,7 +130,7 @@ namespace Simple.Owin.Cors.Tests
         [Fact]
         public void ItSetsTheSpecifiedResponseStatusWhenRejecting()
         {
-            var func = CorsMiddleware.Create(new OriginSetMatcher("https://reject.com")).UseStopStatus(500).Build();
+            var func = Cors.Create(new OriginSetMatcher("https://reject.com")).UseStopStatus(500).Build();
             var env = CreateEnv();
             func(env, Completed);
             Assert.Equal(500, env[OwinKeys.StatusCode]);
@@ -148,7 +149,7 @@ namespace Simple.Owin.Cors.Tests
             };
         }
 
-        private static Task Completed()
+        private static Task Completed(IDictionary<string,object> _)
         {
             var tcs = new TaskCompletionSource<int>();
             tcs.SetResult(0);

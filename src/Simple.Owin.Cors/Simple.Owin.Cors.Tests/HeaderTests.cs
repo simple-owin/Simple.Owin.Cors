@@ -1,4 +1,4 @@
-﻿namespace Simple.Owin.Cors.Tests
+﻿namespace Simple.Owin.CorsMiddleware.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -10,13 +10,13 @@
     public class HeaderTests
     {
         private const string HostValue = "https://cors.com";
-        private readonly Func<Task> _next = Completed;
+        private readonly Func<IDictionary<string,object>, Task> _next = Completed;
         
         [Fact]
         public void ItSetsAllowOriginHeader()
         {
             var env = CreateEnv();
-            var func = CorsMiddleware.Create(new OriginSetMatcher(HostValue)).Build();
+            var func = Cors.Create(new OriginSetMatcher(HostValue)).Build();
             func(env, _next);
             Assert.Equal(HostValue, GetResponseHeader(env, HeaderKeys.AccessControlAllowOrigin));
         }
@@ -25,7 +25,7 @@
         public void ItSetsAllowOriginHeaderToAsteriskForWildcard()
         {
             var env = CreateEnv();
-            var func = CorsMiddleware.Wildcard().Build();
+            var func = Cors.Wildcard().Build();
             func(env, _next);
             Assert.Equal("*", GetResponseHeader(env, HeaderKeys.AccessControlAllowOrigin));
         }
@@ -34,7 +34,7 @@
         public void ItSetsAllowCredentialsHeader()
         {
             var env = CreateEnv();
-            var func = CorsMiddleware.Wildcard().AllowCredentials().Build();
+            var func = Cors.Wildcard().AllowCredentials().Build();
             func(env, _next);
             Assert.Equal("true", GetResponseHeader(env, HeaderKeys.AccessControlAllowCredentials));
         }
@@ -43,7 +43,7 @@
         public void ItSetsAllowMethodsHeaderForSingleValue()
         {
             var env = CreateEnv();
-            var func = CorsMiddleware.Wildcard().AllowMethods("GET").Build();
+            var func = Cors.Wildcard().AllowMethods("GET").Build();
             func(env, _next);
             Assert.Equal("GET", GetResponseHeader(env, HeaderKeys.AccessControlAllowMethods));
         }
@@ -52,7 +52,7 @@
         public void ItSetsAllowMethodsHeaderForManyValues()
         {
             var env = CreateEnv();
-            var func = CorsMiddleware.Wildcard().AllowMethods("GET", "POST", "PUT").Build();
+            var func = Cors.Wildcard().AllowMethods("GET", "POST", "PUT").Build();
             func(env, _next);
             Assert.Equal("GET, POST, PUT", GetResponseHeader(env, HeaderKeys.AccessControlAllowMethods));
         }
@@ -61,7 +61,7 @@
         public void ItSetsAllowHeadersHeaderForSingleValue()
         {
             var env = CreateEnv();
-            var func = CorsMiddleware.Wildcard().AllowHeaders("X-HEADER-1").Build();
+            var func = Cors.Wildcard().AllowHeaders("X-HEADER-1").Build();
             func(env, _next);
             Assert.Equal("X-HEADER-1", GetResponseHeader(env, HeaderKeys.AccessControlAllowHeaders));
         }
@@ -70,7 +70,7 @@
         public void ItSetsAllowHeadersHeaderForManyValues()
         {
             var env = CreateEnv();
-            var func = CorsMiddleware.Wildcard().AllowHeaders("X-HEADER-1", "X-HEADER-2", "X-HEADER-3").Build();
+            var func = Cors.Wildcard().AllowHeaders("X-HEADER-1", "X-HEADER-2", "X-HEADER-3").Build();
             func(env, _next);
             Assert.Equal("X-HEADER-1, X-HEADER-2, X-HEADER-3", GetResponseHeader(env, HeaderKeys.AccessControlAllowHeaders));
         }
@@ -79,7 +79,7 @@
         public void ItSetsExposeHeadersHeaderForSingleValue()
         {
             var env = CreateEnv();
-            var func = CorsMiddleware.Wildcard().ExposeHeaders("X-HEADER-1").Build();
+            var func = Cors.Wildcard().ExposeHeaders("X-HEADER-1").Build();
             func(env, _next);
             Assert.Equal("X-HEADER-1", GetResponseHeader(env, HeaderKeys.AccessControlExposeHeaders));
         }
@@ -88,7 +88,7 @@
         public void ItSetsExposeHeadersHeaderForManyValues()
         {
             var env = CreateEnv();
-            var func = CorsMiddleware.Wildcard().ExposeHeaders("X-HEADER-1", "X-HEADER-2", "X-HEADER-3").Build();
+            var func = Cors.Wildcard().ExposeHeaders("X-HEADER-1", "X-HEADER-2", "X-HEADER-3").Build();
             func(env, _next);
             Assert.Equal("X-HEADER-1, X-HEADER-2, X-HEADER-3", GetResponseHeader(env, HeaderKeys.AccessControlExposeHeaders));
         }
@@ -97,7 +97,7 @@
         public void ItSetsMaxAgeHeaderFromNumber()
         {
             var env = CreateEnv();
-            var func = CorsMiddleware.Wildcard().MaxAge(3600).Build();
+            var func = Cors.Wildcard().MaxAge(3600).Build();
             func(env, _next);
             Assert.Equal("3600", GetResponseHeader(env, HeaderKeys.AccessControlMaxAge));
         }
@@ -107,7 +107,7 @@
         {
             var env = CreateEnv();
             var timeSpan = TimeSpan.FromDays(1);
-            var func = CorsMiddleware.Wildcard().MaxAge(timeSpan).Build();
+            var func = Cors.Wildcard().MaxAge(timeSpan).Build();
             func(env, _next);
             Assert.Equal(timeSpan.TotalSeconds.ToString(CultureInfo.InvariantCulture), GetResponseHeader(env, HeaderKeys.AccessControlMaxAge));
         }
@@ -139,7 +139,7 @@
             return null;
         }
 
-        private static Task Completed()
+        private static Task Completed(IDictionary<string,object> _)
         {
             var tcs = new TaskCompletionSource<int>();
             tcs.SetResult(0);

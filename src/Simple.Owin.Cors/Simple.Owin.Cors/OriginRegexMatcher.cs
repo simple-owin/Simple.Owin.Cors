@@ -1,4 +1,4 @@
-﻿namespace Simple.Owin.Cors
+﻿namespace Simple.Owin.CorsMiddleware
 {
     using System.Text.RegularExpressions;
 

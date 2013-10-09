@@ -1,4 +1,4 @@
-﻿namespace Simple.Owin.Cors
+﻿namespace Simple.Owin.CorsMiddleware
 {
     using System;
     using System.Collections.Generic;
@@ -11,7 +11,7 @@
     internal class Builder
     {
         private readonly ParameterExpression _env = Expression.Parameter(typeof (IDictionary<string, object>));
-        private readonly ParameterExpression _next = Expression.Parameter(typeof (Func<Task>));
+        private readonly ParameterExpression _next = Expression.Parameter(typeof (Func<IDictionary<string,object>, Task>));
         private readonly ConstantExpression _hostKey = Expression.Constant("Host");
 
         private readonly OriginMatcher[] _matchers;
@@ -31,13 +31,13 @@
 
         public int StopStatus { get; set; }
 
-        public Func<IDictionary<string, object>, Func<Task>, Task> Build()
+        public Func<IDictionary<string, object>, Func<IDictionary<string, object>, Task>, Task> Build()
         {
             var isAllowed = BuildCheckBlock();
 
             var block = BuildFinalBlock(isAllowed);
 
-            var lambda = Expression.Lambda<Func<IDictionary<string, object>, Func<Task>, Task>>(block, _env, _next);
+            var lambda = Expression.Lambda<Func<IDictionary<string, object>, Func<IDictionary<string, object>, Task>, Task>>(block, _env, _next);
 
             return lambda.Compile();
         }
@@ -58,7 +58,7 @@
 
             var setHeadersBlock = BuildSetHeadersBlock();
 
-            Expression allowedBlock = Expression.Assign(task, Expression.Invoke(_next));
+            Expression allowedBlock = Expression.Assign(task, Expression.Invoke(_next, _env));
 
             if (setHeadersBlock.Count > 0)
             {

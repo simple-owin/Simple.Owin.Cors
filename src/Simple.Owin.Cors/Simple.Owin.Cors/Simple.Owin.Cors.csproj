@@ -41,7 +41,7 @@
   <ItemGroup>
     <Compile Include="Builder.cs" />
     <Compile Include="CorsBuilder.cs" />
-    <Compile Include="CorsMiddleware.cs" />
+    <Compile Include="Cors.cs" />
     <Compile Include="HeaderKeys.cs" />
     <Compile Include="OriginMatcher.cs" />
     <Compile Include="Methods.cs" />

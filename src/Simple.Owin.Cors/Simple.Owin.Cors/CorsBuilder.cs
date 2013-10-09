@@ -1,4 +1,4 @@
-﻿namespace Simple.Owin.Cors
+﻿namespace Simple.Owin.CorsMiddleware
 {
     using System;
     using System.Collections.Generic;
@@ -61,7 +61,7 @@
             return MaxAge((long)timeSpan.TotalSeconds);
         }
 
-        public Func<IDictionary<string, object>, Func<Task>, Task> Build()
+        public Func<IDictionary<string, object>, Func<IDictionary<string, object>, Task>, Task> Build()
         {
             var builder = new Builder(_matchers)
             {
@@ -76,7 +76,7 @@
             return builder.Build();
         }
 
-        public static implicit operator Func<IDictionary<string, object>, Func<Task>, Task>(CorsBuilder builder)
+        public static implicit operator Func<IDictionary<string, object>, Func<IDictionary<string, object>, Task>, Task>(CorsBuilder builder)
         {
             return builder.Build();
         }
