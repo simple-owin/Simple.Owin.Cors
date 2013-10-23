@@ -40,6 +40,39 @@
             headers[key] = new[] {value};
         }
 
+        public static void MirrorRequestMethods(IDictionary<string, object> env)
+        {
+            var requestHeaders = GetHeaders(env, OwinKeys.RequestHeaders);
+            var responseHeaders = GetHeaders(env, OwinKeys.ResponseHeaders);
+            string[] requestMethods;
+            if (requestHeaders.TryGetValue("Access-Control-Request-Methods", out requestMethods))
+            {
+                responseHeaders["Access-Control-Allow-Methods"] = requestMethods;
+            }
+        }
+
+        public static void MirrorRequestHeaders(IDictionary<string, object> env)
+        {
+            var requestHeaders = GetHeaders(env, OwinKeys.RequestHeaders);
+            var responseHeaders = GetHeaders(env, OwinKeys.ResponseHeaders);
+            string[] requestMethods;
+            if (requestHeaders.TryGetValue("Access-Control-Request-Headers", out requestMethods))
+            {
+                responseHeaders["Access-Control-Allow-Headers"] = requestMethods;
+            }
+        }
+
+        private static IDictionary<string, string[]> GetHeaders(IDictionary<string,object> env, string key)
+        {
+            var headers = env.GetValueOrDefault<IDictionary<string, string[]>>(key);
+            if (headers == null)
+            {
+                headers = new Dictionary<string, string[]>();
+                env[key] = headers;
+            }
+            return headers;
+        }
+
         public static Task Stop(IDictionary<string, object> env, int statusCode)
         {
             env[OwinKeys.StatusCode] = statusCode;

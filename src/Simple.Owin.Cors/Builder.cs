@@ -84,12 +84,26 @@
 
             if (AllowMethods != null && AllowMethods.Length > 0)
             {
-                block.Add(BuildSetHeaderCall(HeaderKeys.AccessControlAllowMethods, AllowMethods));
+                if (AllowMethods.Length == 1 && AllowMethods[0] == "*")
+                {
+                    block.Add(Expression.Call(Methods.MirrorRequestMethods, _env));
+                }
+                else
+                {
+                    block.Add(BuildSetHeaderCall(HeaderKeys.AccessControlAllowMethods, AllowMethods));
+                }
             }
 
             if (AllowHeaders != null && AllowHeaders.Length > 0)
             {
-                block.Add(BuildSetHeaderCall(HeaderKeys.AccessControlAllowHeaders, AllowHeaders));
+                if (AllowHeaders.Length == 1 && AllowHeaders[0] == "*")
+                {
+                    block.Add(Expression.Call(Methods.MirrorRequestHeaders, _env));
+                }
+                else
+                {
+                    block.Add(BuildSetHeaderCall(HeaderKeys.AccessControlAllowHeaders, AllowHeaders));
+                }
             }
 
             if (ExposeHeaders != null && ExposeHeaders.Length > 0)

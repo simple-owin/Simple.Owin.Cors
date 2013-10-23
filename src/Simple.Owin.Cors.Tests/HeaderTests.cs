@@ -47,6 +47,16 @@
             func(env, _next);
             Assert.Equal("GET", GetResponseHeader(env, HeaderKeys.AccessControlAllowMethods));
         }
+
+        [Fact]
+        public void ItMirrorsRequestMethodsWhenUsingWildcard()
+        {
+            var env = CreateEnv();
+            ((IDictionary<string, string[]>) env[OwinKeys.RequestHeaders])["Access-Control-Request-Methods"] = new[] {"GET"};
+            var func = Cors.Wildcard().AllowMethods("*").Build();
+            func(env, _next);
+            Assert.Equal("GET", GetResponseHeader(env, HeaderKeys.AccessControlAllowMethods));
+        }
         
         [Fact]
         public void ItSetsAllowMethodsHeaderForManyValues()
@@ -74,6 +84,17 @@
             func(env, _next);
             Assert.Equal("X-HEADER-1, X-HEADER-2, X-HEADER-3", GetResponseHeader(env, HeaderKeys.AccessControlAllowHeaders));
         }
+
+        [Fact]
+        public void ItMirrorsRequestHeadersWhenUsingWildcard()
+        {
+            var env = CreateEnv();
+            ((IDictionary<string, string[]>)env[OwinKeys.RequestHeaders])["Access-Control-Request-Headers"] = new[] { "X-HEADER" };
+            var func = Cors.Wildcard().AllowHeaders("*").Build();
+            func(env, _next);
+            Assert.Equal("X-HEADER", GetResponseHeader(env, HeaderKeys.AccessControlAllowHeaders));
+        }
+        
 
         [Fact]
         public void ItSetsExposeHeadersHeaderForSingleValue()

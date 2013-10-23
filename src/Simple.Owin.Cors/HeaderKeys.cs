@@ -1,6 +1,6 @@
 ﻿namespace Simple.Owin.CorsMiddleware
 {
-    public static class HeaderKeys
+    internal static class HeaderKeys
     {
         /// <summary>
         /// The <c>Access-Control-Allow-Origin</c> response header field.

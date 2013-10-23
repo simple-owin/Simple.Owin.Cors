@@ -29,7 +29,7 @@ namespace Simple.Owin.CorsMiddleware.Tests
         [Fact]
         public void ItCallsTheNextFuncWithSet()
         {
-            var func = Cors.Create(new OriginSetMatcher("https://cors.com")).Build();
+            var func = Cors.Create("https://cors.com").Build();
             var env = CreateEnv();
             bool pass = false;
             AppFunc next = e =>
@@ -44,7 +44,7 @@ namespace Simple.Owin.CorsMiddleware.Tests
         [Fact]
         public void ItDoesNotCallTheNextFuncWithSet()
         {
-            var func = Cors.Create(new OriginSetMatcher("https://reject.com")).Build();
+            var func = Cors.Create("https://reject.com").Build();
             var env = CreateEnv();
             bool pass = false;
             AppFunc next = e =>

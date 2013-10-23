@@ -7,7 +7,7 @@
     <ProjectGuid>{C0EEE175-BF65-4EAC-A2D7-2615D4982329}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Simple.Owin.Cors</RootNamespace>
+    <RootNamespace>Simple.Owin.CorsMiddleware</RootNamespace>
     <AssemblyName>Simple.Owin.Cors</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -24,10 +24,11 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\build\net45\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>..\..\build\net45\Simple.Owin.Cors.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -43,6 +44,7 @@
     <Compile Include="CorsBuilder.cs" />
     <Compile Include="Cors.cs" />
     <Compile Include="HeaderKeys.cs" />
+    <Compile Include="OriginFuncMatcher.cs" />
     <Compile Include="OriginMatcher.cs" />
     <Compile Include="Methods.cs" />
     <Compile Include="OriginRegexMatcher.cs" />
