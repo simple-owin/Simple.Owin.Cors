@@ -14,7 +14,7 @@
         private readonly string[] _allowMethods;
         private readonly string[] _allowHeaders;
         private readonly string[] _exposeHeaders;
-        private readonly double _maxAge;
+        private readonly double? _maxAge;
         private readonly int _stopStatus;
 
         internal CorsBuilder(params OriginMatcher[] matchers)

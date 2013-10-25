@@ -63,7 +63,7 @@
             if (setHeadersBlock.Count > 0)
             {
                 setHeadersBlock.Add(allowedBlock);
-                allowedBlock = Expression.Block(new[] {task}, setHeadersBlock);
+                allowedBlock = Expression.Block(setHeadersBlock);
             }
 
             var ifThen =
